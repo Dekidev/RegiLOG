@@ -1,4 +1,4 @@
-from ui.form import App
+from app.ui.form import App
 
 if __name__ == "__main__":
     app = App()

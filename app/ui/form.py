@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import datetime
-from services.spreadsheet import salvar_dados_excel
+from app.services.spreadsheet import *
 
 class App(ctk.CTk):
     def __init__(self):
@@ -11,8 +11,8 @@ class App(ctk.CTk):
         
         hoje_var = ctk.StringVar(value=datetime.date.today().strftime("%d/%m/%Y"))
 
-        self.label_titulo = ctk.CTkLabel(self, text='Formulário- MIMO')
-        self.label_titulo.grid(row=0, columnspan= 3, padx=10, pady= 10, sticky= 'new')
+        self.label_titulo = ctk.CTkLabel(self, text='Formulário- MIMO', font=("Arial", 24, "bold"))
+        self.label_titulo.grid(row=0, column=1,columnspan= 3, padx=10, pady= 10, sticky= 'new')
 
         self.label_data = ctk.CTkLabel(self, text='Data').grid(row=1, column= 0, padx=10, pady= 10)
         self.entry_data = ctk.CTkEntry(self, textvariable= hoje_var)
@@ -47,13 +47,17 @@ class App(ctk.CTk):
         self.btn_msg = ctk.CTkLabel(self, text='')
         self.btn_msg.grid(row=5, column=1, padx=10, pady=10, columnspan= 2)
 
+        self.tabela_frame = servicos(self)
+        self.tabela_frame.grid(row=6, column=0, columnspan=5, padx=10, pady=(0, 10), sticky="nsew")
+
+
     
     def botao_apertado(self):
         print("Botão salvar foi clicado")
         self.salvar_dados()
-        self.os_var.set(" ")
-        self.btn_msg.configure(text= 'Ordem de serviço salva com sucesso!')
-        self.after(500, self.restaurar_btn)
+        self.os_var.set(" ") #limpa campo OS
+        self.after(2000, self.restaurar_btn)
+        self.tabela_frame.atualizar_dados()
 
     def restaurar_btn(self):
         self.btn_msg.configure(text=' ')
@@ -65,8 +69,19 @@ class App(ctk.CTk):
         valor = self.valor_var.get()
 
         print(f"Salvando: {data}, {os_num}, {servico}, {valor}")
-        salvar_dados_excel(data, os_num, servico, valor)
+        
+        resultado = salvar_dados_excel(data, os_num, servico, valor)
 
+        if not resultado:
+            print(f"O.S. duplicada detectada: {os_num}")
+            self.btn_msg.configure(text=f"O.S. duplicada detectada: {os_num}")
+            
+        else:
+            print("Ordem de serviço salva com sucesso!")
+            self.btn_msg.configure(text="Ordem de serviço salva com sucesso!")
+        
+
+                
 
     def atualizar_preco_automaticamente(self, event=None):
         servico_escolhido = self.servico_var.get()
@@ -85,10 +100,6 @@ class App(ctk.CTk):
         else:
             self.valor_var.set("Digite o valor (R$)")
     
-
-
-
-
 if __name__ == "__main__":
     app = App()
     app.mainloop()
